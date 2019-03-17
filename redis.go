@@ -16,7 +16,7 @@ func Init(addr string, db int, pools int, param ...string) {
 		passwd = param[0]
 	}
 
-	client := redis.NewClient(&redis.Options{
+	client = redis.NewClient(&redis.Options{
 		Addr:     addr,
 		Password: passwd, // no password set
 		DB:       db,     // use default DB
