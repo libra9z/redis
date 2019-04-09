@@ -5,7 +5,6 @@ import (
 	"github.com/go-redis/redis"
 	"net"
 	"reflect"
-	"time"
 )
 
 type Subscriber struct {
@@ -53,14 +52,15 @@ func (s *Subscriber) listen() error {
 	var payload string
 
 	for {
-		msg, err := s.pubsub.ReceiveTimeout(time.Second)
+		//msg, err := s.pubsub.ReceiveTimeout(time.Second)
+		msg, err := s.pubsub.Receive()
 		if err != nil {
 			if reflect.TypeOf(err) == reflect.TypeOf(&net.OpError{}) && reflect.TypeOf(err.(*net.OpError).Err).String() == "*net.timeoutError" {
 				// Timeout, ignore
 				continue
 			}
 			// Actual error
-			fmt.Printf("Error in ReceiveTimeout(): %v\n", err)
+			//fmt.Printf("Error in ReceiveTimeout(): %v\n", err)
 		}
 
 		channel = ""

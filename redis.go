@@ -16,7 +16,7 @@ func Init(addr string, db int, pools int, param ...string) {
 		passwd = param[0]
 	}
 
-	client := redis.NewClient(&redis.Options{
+	client = redis.NewClient(&redis.Options{
 		Addr:     addr,
 		Password: passwd, // no password set
 		DB:       db,     // use default DB
@@ -74,12 +74,14 @@ func SetValue(key string, value interface{}, exp time.Duration) {
 	}
 }
 
-func Lpush(key string, data ...interface{}) {
+func Lpush(key string, data ...interface{}) error {
 	intCmd := client.LPush(key, data...)
 
 	if intCmd.Err() != nil {
 		fmt.Printf("error: %v\n", intCmd.Err().Error())
+		return intCmd.Err()
 	}
+	return nil
 }
 func Brpop(timeout time.Duration, key ...string) (string, error) {
 	ssliceCmd := client.BRPop(timeout, key...)
