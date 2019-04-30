@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/go-redis/redis"
 	"time"
+	"strconv"
 )
 
 var client *redis.Client
@@ -33,7 +34,8 @@ func GetIncr(key string) string {
 	if intCmd.Err() != nil {
 		return ""
 	}
-	return intCmd.String()
+
+	return strconv.FormatInt(intCmd.Val(),10)
 }
 
 func GetIncrID(key string) int64 {
