@@ -187,3 +187,23 @@ func Publish(key string, buf interface{}) int64 {
 
 	return ret
 }
+
+func TTL(key string) time.Duration {
+	duCmd := client.TTL(key)
+	if duCmd.Err() != nil {
+		return 0
+	}
+
+	return duCmd.Val()
+}
+
+func FetchMessage(dq string, timeout uint) (string, error) {
+	var queues []string
+	queues = append(queues, dq)
+	strs := client.BRPop(time.Duration(timeout)*time.Second,queues...)
+
+	if strs == nil {
+		return "", errors.New("get empty data")
+	}
+	return strs.String(), nil
+}
