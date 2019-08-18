@@ -197,13 +197,14 @@ func TTL(key string) time.Duration {
 	return duCmd.Val()
 }
 
-func FetchMessage(dq string, timeout uint) (string, error) {
+func FetchMessage(dq string, timeout uint) ([]string, error) {
 	var queues []string
 	queues = append(queues, dq)
 	strs := client.BRPop(time.Duration(timeout)*time.Second,queues...)
 
 	if strs == nil {
-		return "", errors.New("get empty data")
+		return nil, errors.New("get empty data")
 	}
-	return strs.String(), nil
+	
+	return strs.Val(), nil
 }
