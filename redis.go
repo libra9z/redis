@@ -4,25 +4,55 @@ import (
 	"errors"
 	"fmt"
 	"github.com/go-redis/redis"
+	"strings"
 	"time"
 	"strconv"
 )
 
 var client *redis.Client
 
-//param : 0 password
+//param : [0] password
+//param : [1] mode: alone,sentinel,cluster
+//param : [2] mastername,
 func Init(addr string, db int, pools int, param ...string) {
 	passwd := ""
 	if len(param) > 0 {
 		passwd = param[0]
 	}
+	mode :="alone"
+	if len(param) >1 {
+		mode = param[1]
+	}
+	mastername :="mymaster"
+	if len(param) >2 {
+		mastername = param[1]
+	}
 
-	client = redis.NewClient(&redis.Options{
-		Addr:     addr,
-		Password: passwd, // no password set
-		DB:       db,     // use default DB
-		PoolSize: pools,
-	})
+	var address []string
+
+	address = strings.Split(addr,",")
+
+	switch mode {
+	case "alone":
+		client = redis.NewClient(&redis.Options{
+			Addr:     addr,
+			Password: passwd, // no password set
+			DB:       db,     // use default DB
+			PoolSize: pools,
+		})
+	case "sentinel":
+		sf := &redis.FailoverOptions{
+			// The master name.
+			MasterName: mastername,
+			// A seed list of host:port addresses of sentinel nodes.
+			SentinelAddrs: address,
+
+			// Following options are copied from Options struct.
+			Password: passwd,
+			DB:       db,
+		}
+		client = redis.NewFailoverClient(sf)
+	}
 
 	pong, err := client.Ping().Result()
 	fmt.Println(pong, err)
