@@ -25,7 +25,7 @@ func Init(addr string, db int, pools int, param ...string) {
 	}
 	mastername :="mymaster"
 	if len(param) >2 {
-		mastername = param[1]
+		mastername = param[2]
 	}
 
 	var address []string
