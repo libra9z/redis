@@ -58,6 +58,53 @@ func Init(addr string, db int, pools int, param ...string) {
 	fmt.Println(pong, err)
 }
 
+func NewRedisClient(addr string, db int, pools int, param ...string) (c *redis.Client) {
+	passwd := ""
+	if len(param) > 0 {
+		passwd = param[0]
+	}
+	mode :="alone"
+	if len(param) >1 {
+		mode = param[1]
+	}
+	mastername :="mymaster"
+	if len(param) >2 {
+		mastername = param[2]
+	}
+
+	var address []string
+
+	address = strings.Split(addr,",")
+
+	switch mode {
+	case "alone":
+		c = redis.NewClient(&redis.Options{
+			Addr:     addr,
+			Password: passwd, // no password set
+			DB:       db,     // use default DB
+			PoolSize: pools,
+		})
+	case "sentinel":
+		sf := &redis.FailoverOptions{
+			// The master name.
+			MasterName: mastername,
+			// A seed list of host:port addresses of sentinel nodes.
+			SentinelAddrs: address,
+
+			// Following options are copied from Options struct.
+			Password: passwd,
+			DB:       db,
+		}
+		c = redis.NewFailoverClient(sf)
+	}
+	if c == nil {
+		return nil
+	}
+	pong, err := c.Ping().Result()
+	fmt.Println(pong, err)
+	return c
+}
+
 func GetIncr(key string) string {
 	intCmd := client.Incr(key)
 
