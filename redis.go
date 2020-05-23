@@ -285,3 +285,33 @@ func FetchMessage(dq string, timeout uint) ([]string, error) {
 	
 	return strs.Val(), nil
 }
+
+func Hgetall(key string, val interface{}) error {
+	duCmd := client.HGetAll(key)
+	if duCmd.Err() != nil {
+		return duCmd.Err()
+	}
+	val,err := duCmd.Result()
+	return err
+}
+
+func Sadd(key string, members... interface{}) (interface{},error) {
+	duCmd := client.SAdd(key,members...)
+	if duCmd.Err() != nil {
+		return 0,duCmd.Err()
+	}
+	val,err := duCmd.Result()
+
+	return val,err
+}
+
+func Sismember(key string, members interface{}) (bool,error) {
+	bCmd := client.SIsMember(key,members)
+	if bCmd.Err() != nil {
+		return false,bCmd.Err()
+	}
+	val,err := bCmd.Result()
+
+	return val,err
+}
+
