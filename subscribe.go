@@ -1,6 +1,7 @@
 package redis
 
 import (
+	"context"
 	"fmt"
 	"github.com/go-redis/redis"
 	"net"
@@ -17,15 +18,15 @@ type processFunc func(string, string)
 
 func NewSubscriber(channel string, fn processFunc) (*Subscriber, error) {
 	var err error
-
+	ctx := context.Background()
 	s := Subscriber{
-		pubsub:   client.Subscribe(channel),
+		pubsub:   client.Subscribe(ctx,channel),
 		channel:  channel,
 		callback: fn,
 	}
 
 	// Subscribe to the channel
-	err = s.subscribe()
+	err = s.subscribe(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -36,10 +37,10 @@ func NewSubscriber(channel string, fn processFunc) (*Subscriber, error) {
 	return &s, nil
 }
 
-func (s *Subscriber) subscribe() error {
+func (s *Subscriber) subscribe(ctx context.Context) error {
 	var err error
 
-	err = s.pubsub.Subscribe(s.channel)
+	err = s.pubsub.Subscribe(ctx,s.channel)
 	if err != nil {
 		fmt.Println("Error subscribing to channel.")
 		return err
@@ -53,7 +54,8 @@ func (s *Subscriber) listen() error {
 
 	for {
 		//msg, err := s.pubsub.ReceiveTimeout(time.Second)
-		msg, err := s.pubsub.Receive()
+		ctx := context.Background()
+		msg, err := s.pubsub.Receive(ctx)
 		if err != nil {
 			if reflect.TypeOf(err) == reflect.TypeOf(&net.OpError{}) && reflect.TypeOf(err.(*net.OpError).Err).String() == "*net.timeoutError" {
 				// Timeout, ignore

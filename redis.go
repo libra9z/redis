@@ -1,6 +1,7 @@
 package redis
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/go-redis/redis"
@@ -53,8 +54,8 @@ func Init(addr string, db int, pools int, param ...string) {
 		}
 		client = redis.NewFailoverClient(sf)
 	}
-
-	pong, err := client.Ping().Result()
+	ctx := context.Background()
+	pong, err := client.Ping(ctx).Result()
 	fmt.Println(pong, err)
 }
 
@@ -100,13 +101,14 @@ func NewRedisClient(addr string, db int, pools int, param ...string) (c *redis.C
 	if c == nil {
 		return nil
 	}
-	pong, err := c.Ping().Result()
+	ctx := context.Background()
+	pong, err := c.Ping(ctx).Result()
 	fmt.Println(pong, err)
 	return c
 }
 
-func GetIncr(key string) string {
-	intCmd := client.Incr(key)
+func GetIncr(ctx context.Context,key string) string {
+	intCmd := client.Incr(ctx,key)
 
 	if intCmd.Err() != nil {
 		return ""
@@ -115,8 +117,8 @@ func GetIncr(key string) string {
 	return strconv.FormatInt(intCmd.Val(),10)
 }
 
-func GetIncrID(key string) int64 {
-	intCmd := client.Incr(key)
+func GetIncrID(ctx context.Context,key string) int64 {
+	intCmd := client.Incr(ctx,key)
 
 	if intCmd.Err() != nil {
 		return 0
@@ -124,8 +126,8 @@ func GetIncrID(key string) int64 {
 	return intCmd.Val()
 }
 
-func GetValue(key string) string {
-	result := client.Get(key)
+func GetValue(ctx context.Context,key string) string {
+	result := client.Get(ctx,key)
 
 	if result.Err() != nil {
 		return ""
@@ -134,8 +136,8 @@ func GetValue(key string) string {
 	return result.Val()
 }
 
-func Del(key ...string) (bool, error) {
-	result := client.Del(key...)
+func Del(ctx context.Context,key ...string) (bool, error) {
+	result := client.Del(ctx,key...)
 	if result.Err() != nil {
 		return false, result.Err()
 	}
@@ -146,15 +148,15 @@ func Del(key ...string) (bool, error) {
 	return b, nil
 }
 
-func SetValue(key string, value interface{}, exp time.Duration) {
-	status := client.Set(key, value, exp)
+func SetValue(ctx context.Context,key string, value interface{}, exp time.Duration) {
+	status := client.Set(ctx,key, value, exp)
 	if status.Err() != nil {
 		fmt.Printf("error: %v\n", status.Err().Error())
 	}
 }
 
-func Lpush(key string, data ...interface{}) error {
-	intCmd := client.LPush(key, data...)
+func Lpush(ctx context.Context,key string, data ...interface{}) error {
+	intCmd := client.LPush(ctx,key, data...)
 
 	if intCmd.Err() != nil {
 		fmt.Printf("error: %v\n", intCmd.Err().Error())
@@ -162,8 +164,8 @@ func Lpush(key string, data ...interface{}) error {
 	}
 	return nil
 }
-func Brpop(timeout time.Duration, key ...string) (string, error) {
-	ssliceCmd := client.BRPop(timeout, key...)
+func Brpop(ctx context.Context,timeout time.Duration, key ...string) (string, error) {
+	ssliceCmd := client.BRPop(ctx,timeout, key...)
 	if ssliceCmd.Err() != nil {
 		return "", ssliceCmd.Err()
 	}
@@ -177,8 +179,8 @@ func Brpop(timeout time.Duration, key ...string) (string, error) {
 	return ret, nil
 }
 
-func Setnx(key string, value interface{}, exp time.Duration) bool {
-	boolCmd := client.SetNX(key, value, exp)
+func Setnx(ctx context.Context,key string, value interface{}, exp time.Duration) bool {
+	boolCmd := client.SetNX(ctx,key, value, exp)
 
 	if boolCmd.Err() != nil {
 		return false
@@ -187,8 +189,8 @@ func Setnx(key string, value interface{}, exp time.Duration) bool {
 	return boolCmd.Val()
 }
 
-func Setex(key string, value interface{}, exp time.Duration) bool {
-	statusCmd := client.Set(key, value, exp)
+func Setex(ctx context.Context,key string, value interface{}, exp time.Duration) bool {
+	statusCmd := client.Set(ctx,key, value, exp)
 
 	if statusCmd.Err() != nil {
 		fmt.Printf("error: %v\n", statusCmd.Err().Error())
@@ -197,9 +199,9 @@ func Setex(key string, value interface{}, exp time.Duration) bool {
 	return true
 }
 
-func Hget(key, field string) string {
+func Hget(ctx context.Context,key, field string) string {
 
-	strCmd := client.HGet(key, field)
+	strCmd := client.HGet(ctx,key, field)
 
 	if strCmd.Err() != nil {
 		return ""
@@ -208,32 +210,32 @@ func Hget(key, field string) string {
 	return strCmd.Val()
 }
 
-func Hset(key, field string, value interface{}) (bool, error) {
+func Hset(ctx context.Context,key, field string, value interface{}) (int64, error) {
 
-	boolCmd := client.HSet(key, field, value)
-
-	return boolCmd.Val(), boolCmd.Err()
-}
-
-func Hsetnx(key, field string, value interface{}) (bool, error) {
-
-	boolCmd := client.HSetNX(key, field, value)
+	boolCmd := client.HSet(ctx,key, field, value)
 
 	return boolCmd.Val(), boolCmd.Err()
 }
 
-func Lrange(key string, start int64, end int64) ([]string, error) {
-	strCmd := client.LRange(key, start, end)
+func Hsetnx(ctx context.Context,key, field string, value interface{}) (bool, error) {
+
+	boolCmd := client.HSetNX(ctx,key, field, value)
+
+	return boolCmd.Val(), boolCmd.Err()
+}
+
+func Lrange(ctx context.Context,key string, start int64, end int64) ([]string, error) {
+	strCmd := client.LRange(ctx,key, start, end)
 	return strCmd.Val(), strCmd.Err()
 }
 
-func Keys(pattern string) ([]string, error) {
-	strCmd := client.Keys(pattern)
+func Keys(ctx context.Context,pattern string) ([]string, error) {
+	strCmd := client.Keys(ctx,pattern)
 	return strCmd.Val(), strCmd.Err()
 }
 
-func Exists(key ...string) bool {
-	intCmd := client.Exists(key...)
+func Exists(ctx context.Context,key ...string) bool {
+	intCmd := client.Exists(ctx,key...)
 	if intCmd.Err() != nil {
 		return false
 	}
@@ -244,8 +246,8 @@ func Exists(key ...string) bool {
 	return b
 }
 
-func Expire(key string, exp time.Duration) bool {
-	boolCmd := client.Expire(key, exp)
+func Expire(ctx context.Context,key string, exp time.Duration) bool {
+	boolCmd := client.Expire(ctx,key, exp)
 	if boolCmd.Err() != nil {
 		return false
 	}
@@ -253,8 +255,8 @@ func Expire(key string, exp time.Duration) bool {
 	return boolCmd.Val()
 }
 
-func Publish(key string, buf interface{}) int64 {
-	intCmd := client.Publish(key, buf)
+func Publish(ctx context.Context,key string, buf interface{}) int64 {
+	intCmd := client.Publish(ctx,key, buf)
 
 	if intCmd.Err() != nil {
 		return 0
@@ -265,8 +267,8 @@ func Publish(key string, buf interface{}) int64 {
 	return ret
 }
 
-func TTL(key string) time.Duration {
-	duCmd := client.TTL(key)
+func TTL(ctx context.Context,key string) time.Duration {
+	duCmd := client.TTL(ctx,key)
 	if duCmd.Err() != nil {
 		return 0
 	}
@@ -274,10 +276,10 @@ func TTL(key string) time.Duration {
 	return duCmd.Val()
 }
 
-func FetchMessage(dq string, timeout uint) ([]string, error) {
+func FetchMessage(ctx context.Context,dq string, timeout uint) ([]string, error) {
 	var queues []string
 	queues = append(queues, dq)
-	strs := client.BRPop(time.Duration(timeout)*time.Second,queues...)
+	strs := client.BRPop(ctx,time.Duration(timeout)*time.Second,queues...)
 
 	if strs == nil {
 		return nil, errors.New("get empty data")
@@ -286,8 +288,8 @@ func FetchMessage(dq string, timeout uint) ([]string, error) {
 	return strs.Val(), nil
 }
 
-func Hgetall(key string, val interface{}) error {
-	duCmd := client.HGetAll(key)
+func Hgetall(ctx context.Context,key string, val interface{}) error {
+	duCmd := client.HGetAll(ctx,key)
 	if duCmd.Err() != nil {
 		return duCmd.Err()
 	}
@@ -295,8 +297,8 @@ func Hgetall(key string, val interface{}) error {
 	return err
 }
 
-func Sadd(key string, members... interface{}) (interface{},error) {
-	duCmd := client.SAdd(key,members...)
+func Sadd(ctx context.Context,key string, members... interface{}) (interface{},error) {
+	duCmd := client.SAdd(ctx,key,members...)
 	if duCmd.Err() != nil {
 		return 0,duCmd.Err()
 	}
@@ -305,8 +307,8 @@ func Sadd(key string, members... interface{}) (interface{},error) {
 	return val,err
 }
 
-func Sismember(key string, members interface{}) (bool,error) {
-	bCmd := client.SIsMember(key,members)
+func Sismember(ctx context.Context,key string, members interface{}) (bool,error) {
+	bCmd := client.SIsMember(ctx,key,members)
 	if bCmd.Err() != nil {
 		return false,bCmd.Err()
 	}
