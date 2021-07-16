@@ -12,21 +12,26 @@ import (
 
 var client *redis.Client
 
-//param : [0] password
-//param : [1] mode: alone,sentinel,cluster
-//param : [2] mastername,
+//param : [0] username
+//param : [1] password
+//param : [2] mode: alone,sentinel,cluster
+//param : [3] mastername,
 func Init(addr string, db int, pools int, param ...string) {
 	passwd := ""
+	username := ""
 	if len(param) > 0 {
-		passwd = param[0]
+		username = param[0]
+	}
+	if len(param) > 1 {
+		passwd = param[1]
 	}
 	mode :="alone"
-	if len(param) >1 {
-		mode = param[1]
+	if len(param) >2 {
+		mode = param[2]
 	}
 	mastername :="mymaster"
-	if len(param) >2 {
-		mastername = param[2]
+	if len(param) >3 {
+		mastername = param[3]
 	}
 
 	var address []string
@@ -38,6 +43,7 @@ func Init(addr string, db int, pools int, param ...string) {
 		client = redis.NewClient(&redis.Options{
 			Addr:     addr,
 			Password: passwd, // no password set
+			Username: username,
 			DB:       db,     // use default DB
 			PoolSize: pools,
 		})
@@ -60,17 +66,21 @@ func Init(addr string, db int, pools int, param ...string) {
 }
 
 func NewRedisClient(addr string, db int, pools int, param ...string) (c *redis.Client) {
+	username := ""
 	passwd := ""
 	if len(param) > 0 {
-		passwd = param[0]
+		username = param[0]
+	}
+	if len(param) > 1 {
+		passwd = param[1]
 	}
 	mode :="alone"
-	if len(param) >1 {
-		mode = param[1]
+	if len(param) >2 {
+		mode = param[2]
 	}
 	mastername :="mymaster"
-	if len(param) >2 {
-		mastername = param[2]
+	if len(param) >3 {
+		mastername = param[3]
 	}
 
 	var address []string
@@ -82,6 +92,7 @@ func NewRedisClient(addr string, db int, pools int, param ...string) (c *redis.C
 		c = redis.NewClient(&redis.Options{
 			Addr:     addr,
 			Password: passwd, // no password set
+			Username: username,
 			DB:       db,     // use default DB
 			PoolSize: pools,
 		})
@@ -91,7 +102,6 @@ func NewRedisClient(addr string, db int, pools int, param ...string) (c *redis.C
 			MasterName: mastername,
 			// A seed list of host:port addresses of sentinel nodes.
 			SentinelAddrs: address,
-
 			// Following options are copied from Options struct.
 			Password: passwd,
 			DB:       db,
