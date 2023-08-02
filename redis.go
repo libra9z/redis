@@ -5,17 +5,17 @@ import (
 	"errors"
 	"fmt"
 	"github.com/go-redis/redis/v8"
+	"strconv"
 	"strings"
 	"time"
-	"strconv"
 )
 
 var client *redis.Client
 
-//param : [0] username
-//param : [1] password
-//param : [2] mode: alone,sentinel,cluster
-//param : [3] mastername,
+// param : [0] username
+// param : [1] password
+// param : [2] mode: alone,sentinel,cluster
+// param : [3] mastername,
 func Init(addr string, db int, pools int, param ...string) {
 	passwd := ""
 	username := ""
@@ -25,18 +25,18 @@ func Init(addr string, db int, pools int, param ...string) {
 	if len(param) > 1 {
 		passwd = param[1]
 	}
-	mode :="alone"
-	if len(param) >2 {
+	mode := "alone"
+	if len(param) > 2 {
 		mode = param[2]
 	}
-	mastername :="mymaster"
-	if len(param) >3 {
+	mastername := "mymaster"
+	if len(param) > 3 {
 		mastername = param[3]
 	}
 
 	var address []string
 
-	address = strings.Split(addr,",")
+	address = strings.Split(addr, ",")
 
 	switch mode {
 	case "alone":
@@ -44,7 +44,7 @@ func Init(addr string, db int, pools int, param ...string) {
 			Addr:     addr,
 			Password: passwd, // no password set
 			Username: username,
-			DB:       db,     // use default DB
+			DB:       db, // use default DB
 			PoolSize: pools,
 		})
 	case "sentinel":
@@ -74,18 +74,18 @@ func NewRedisClient(addr string, db int, pools int, param ...string) (c *redis.C
 	if len(param) > 1 {
 		passwd = param[1]
 	}
-	mode :="alone"
-	if len(param) >2 {
+	mode := "alone"
+	if len(param) > 2 {
 		mode = param[2]
 	}
-	mastername :="mymaster"
-	if len(param) >3 {
+	mastername := "mymaster"
+	if len(param) > 3 {
 		mastername = param[3]
 	}
 
 	var address []string
 
-	address = strings.Split(addr,",")
+	address = strings.Split(addr, ",")
 
 	switch mode {
 	case "alone":
@@ -93,7 +93,7 @@ func NewRedisClient(addr string, db int, pools int, param ...string) (c *redis.C
 			Addr:     addr,
 			Password: passwd, // no password set
 			Username: username,
-			DB:       db,     // use default DB
+			DB:       db, // use default DB
 			PoolSize: pools,
 		})
 	case "sentinel":
@@ -117,18 +117,18 @@ func NewRedisClient(addr string, db int, pools int, param ...string) (c *redis.C
 	return c
 }
 
-func GetIncr(ctx context.Context,key string) string {
-	intCmd := client.Incr(ctx,key)
+func GetIncr(ctx context.Context, key string) string {
+	intCmd := client.Incr(ctx, key)
 
 	if intCmd.Err() != nil {
 		return ""
 	}
 
-	return strconv.FormatInt(intCmd.Val(),10)
+	return strconv.FormatInt(intCmd.Val(), 10)
 }
 
-func GetIncrID(ctx context.Context,key string) int64 {
-	intCmd := client.Incr(ctx,key)
+func GetIncrID(ctx context.Context, key string) int64 {
+	intCmd := client.Incr(ctx, key)
 
 	if intCmd.Err() != nil {
 		return 0
@@ -136,8 +136,8 @@ func GetIncrID(ctx context.Context,key string) int64 {
 	return intCmd.Val()
 }
 
-func GetValue(ctx context.Context,key string) string {
-	result := client.Get(ctx,key)
+func GetValue(ctx context.Context, key string) string {
+	result := client.Get(ctx, key)
 
 	if result.Err() != nil {
 		return ""
@@ -146,8 +146,8 @@ func GetValue(ctx context.Context,key string) string {
 	return result.Val()
 }
 
-func Del(ctx context.Context,key ...string) (bool, error) {
-	result := client.Del(ctx,key...)
+func Del(ctx context.Context, key ...string) (bool, error) {
+	result := client.Del(ctx, key...)
 	if result.Err() != nil {
 		return false, result.Err()
 	}
@@ -158,15 +158,15 @@ func Del(ctx context.Context,key ...string) (bool, error) {
 	return b, nil
 }
 
-func SetValue(ctx context.Context,key string, value interface{}, exp time.Duration) {
-	status := client.Set(ctx,key, value, exp)
+func SetValue(ctx context.Context, key string, value interface{}, exp time.Duration) {
+	status := client.Set(ctx, key, value, exp)
 	if status.Err() != nil {
 		fmt.Printf("error: %v\n", status.Err().Error())
 	}
 }
 
-func Lpush(ctx context.Context,key string, data ...interface{}) error {
-	intCmd := client.LPush(ctx,key, data...)
+func Lpush(ctx context.Context, key string, data ...interface{}) error {
+	intCmd := client.LPush(ctx, key, data...)
 
 	if intCmd.Err() != nil {
 		fmt.Printf("error: %v\n", intCmd.Err().Error())
@@ -174,8 +174,8 @@ func Lpush(ctx context.Context,key string, data ...interface{}) error {
 	}
 	return nil
 }
-func Brpop(ctx context.Context,timeout time.Duration, key ...string) (string, error) {
-	ssliceCmd := client.BRPop(ctx,timeout, key...)
+func Brpop(ctx context.Context, timeout time.Duration, key ...string) (string, error) {
+	ssliceCmd := client.BRPop(ctx, timeout, key...)
 	if ssliceCmd.Err() != nil {
 		return "", ssliceCmd.Err()
 	}
@@ -189,8 +189,8 @@ func Brpop(ctx context.Context,timeout time.Duration, key ...string) (string, er
 	return ret, nil
 }
 
-func Setnx(ctx context.Context,key string, value interface{}, exp time.Duration) bool {
-	boolCmd := client.SetNX(ctx,key, value, exp)
+func Setnx(ctx context.Context, key string, value interface{}, exp time.Duration) bool {
+	boolCmd := client.SetNX(ctx, key, value, exp)
 
 	if boolCmd.Err() != nil {
 		return false
@@ -199,8 +199,8 @@ func Setnx(ctx context.Context,key string, value interface{}, exp time.Duration)
 	return boolCmd.Val()
 }
 
-func Setex(ctx context.Context,key string, value interface{}, exp time.Duration) bool {
-	statusCmd := client.Set(ctx,key, value, exp)
+func Setex(ctx context.Context, key string, value interface{}, exp time.Duration) bool {
+	statusCmd := client.Set(ctx, key, value, exp)
 
 	if statusCmd.Err() != nil {
 		fmt.Printf("error: %v\n", statusCmd.Err().Error())
@@ -209,9 +209,9 @@ func Setex(ctx context.Context,key string, value interface{}, exp time.Duration)
 	return true
 }
 
-func Hget(ctx context.Context,key, field string) string {
+func Hget(ctx context.Context, key, field string) string {
 
-	strCmd := client.HGet(ctx,key, field)
+	strCmd := client.HGet(ctx, key, field)
 
 	if strCmd.Err() != nil {
 		return ""
@@ -220,32 +220,39 @@ func Hget(ctx context.Context,key, field string) string {
 	return strCmd.Val()
 }
 
-func Hset(ctx context.Context,key, field string, value interface{}) (int64, error) {
+func Hset(ctx context.Context, key, field string, value interface{}) (int64, error) {
 
-	boolCmd := client.HSet(ctx,key, field, value)
-
-	return boolCmd.Val(), boolCmd.Err()
-}
-
-func Hsetnx(ctx context.Context,key, field string, value interface{}) (bool, error) {
-
-	boolCmd := client.HSetNX(ctx,key, field, value)
+	boolCmd := client.HSet(ctx, key, field, value)
 
 	return boolCmd.Val(), boolCmd.Err()
 }
 
-func Lrange(ctx context.Context,key string, start int64, end int64) ([]string, error) {
-	strCmd := client.LRange(ctx,key, start, end)
+func Hkeys(ctx context.Context, key string) []string {
+
+	stringSliceCmd := client.HKeys(ctx, key)
+
+	return stringSliceCmd.Val()
+}
+
+func Hsetnx(ctx context.Context, key, field string, value interface{}) (bool, error) {
+
+	boolCmd := client.HSetNX(ctx, key, field, value)
+
+	return boolCmd.Val(), boolCmd.Err()
+}
+
+func Lrange(ctx context.Context, key string, start int64, end int64) ([]string, error) {
+	strCmd := client.LRange(ctx, key, start, end)
 	return strCmd.Val(), strCmd.Err()
 }
 
-func Keys(ctx context.Context,pattern string) ([]string, error) {
-	strCmd := client.Keys(ctx,pattern)
+func Keys(ctx context.Context, pattern string) ([]string, error) {
+	strCmd := client.Keys(ctx, pattern)
 	return strCmd.Val(), strCmd.Err()
 }
 
-func Exists(ctx context.Context,key ...string) bool {
-	intCmd := client.Exists(ctx,key...)
+func Exists(ctx context.Context, key ...string) bool {
+	intCmd := client.Exists(ctx, key...)
 	if intCmd.Err() != nil {
 		return false
 	}
@@ -256,8 +263,8 @@ func Exists(ctx context.Context,key ...string) bool {
 	return b
 }
 
-func Expire(ctx context.Context,key string, exp time.Duration) bool {
-	boolCmd := client.Expire(ctx,key, exp)
+func Expire(ctx context.Context, key string, exp time.Duration) bool {
+	boolCmd := client.Expire(ctx, key, exp)
 	if boolCmd.Err() != nil {
 		return false
 	}
@@ -265,8 +272,8 @@ func Expire(ctx context.Context,key string, exp time.Duration) bool {
 	return boolCmd.Val()
 }
 
-func Publish(ctx context.Context,key string, buf interface{}) int64 {
-	intCmd := client.Publish(ctx,key, buf)
+func Publish(ctx context.Context, key string, buf interface{}) int64 {
+	intCmd := client.Publish(ctx, key, buf)
 
 	if intCmd.Err() != nil {
 		return 0
@@ -277,8 +284,8 @@ func Publish(ctx context.Context,key string, buf interface{}) int64 {
 	return ret
 }
 
-func TTL(ctx context.Context,key string) time.Duration {
-	duCmd := client.TTL(ctx,key)
+func TTL(ctx context.Context, key string) time.Duration {
+	duCmd := client.TTL(ctx, key)
 	if duCmd.Err() != nil {
 		return 0
 	}
@@ -286,44 +293,43 @@ func TTL(ctx context.Context,key string) time.Duration {
 	return duCmd.Val()
 }
 
-func FetchMessage(ctx context.Context,dq string, timeout uint) ([]string, error) {
+func FetchMessage(ctx context.Context, dq string, timeout uint) ([]string, error) {
 	var queues []string
 	queues = append(queues, dq)
-	strs := client.BRPop(ctx,time.Duration(timeout)*time.Second,queues...)
+	strs := client.BRPop(ctx, time.Duration(timeout)*time.Second, queues...)
 
 	if strs == nil {
 		return nil, errors.New("get empty data")
 	}
-	
+
 	return strs.Val(), nil
 }
 
-func Hgetall(ctx context.Context,key string, val interface{}) error {
-	duCmd := client.HGetAll(ctx,key)
+func Hgetall(ctx context.Context, key string, val interface{}) error {
+	duCmd := client.HGetAll(ctx, key)
 	if duCmd.Err() != nil {
 		return duCmd.Err()
 	}
-	val,err := duCmd.Result()
+	val, err := duCmd.Result()
 	return err
 }
 
-func Sadd(ctx context.Context,key string, members... interface{}) (interface{},error) {
-	duCmd := client.SAdd(ctx,key,members...)
+func Sadd(ctx context.Context, key string, members ...interface{}) (interface{}, error) {
+	duCmd := client.SAdd(ctx, key, members...)
 	if duCmd.Err() != nil {
-		return 0,duCmd.Err()
+		return 0, duCmd.Err()
 	}
-	val,err := duCmd.Result()
+	val, err := duCmd.Result()
 
-	return val,err
+	return val, err
 }
 
-func Sismember(ctx context.Context,key string, members interface{}) (bool,error) {
-	bCmd := client.SIsMember(ctx,key,members)
+func Sismember(ctx context.Context, key string, members interface{}) (bool, error) {
+	bCmd := client.SIsMember(ctx, key, members)
 	if bCmd.Err() != nil {
-		return false,bCmd.Err()
+		return false, bCmd.Err()
 	}
-	val,err := bCmd.Result()
+	val, err := bCmd.Result()
 
-	return val,err
+	return val, err
 }
-
